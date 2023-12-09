@@ -40,9 +40,9 @@ class Ball(pg.Rect):
         if self.colliderect(rackets.left_racket):
             self.x_velocity = abs(self.x_velocity) + self.speed_ball + 2
         if self.colliderect(rackets.back_right_racket):
-            self.x_velocity = abs(self.x_velocity) + self.speed_ball + 4
+            self.x_velocity = abs(self.x_velocity) + self.speed_ball + 2
         if self.colliderect(rackets.back_left_racket):
-            self.x_velocity = -abs(self.x_velocity) - self.speed_ball - 4
+            self.x_velocity = -abs(self.x_velocity) - self.speed_ball - 2
         if self.colliderect(rackets.right_racket):
             self.x_velocity = -abs(self.x_velocity) - self.speed_ball - 2
 
