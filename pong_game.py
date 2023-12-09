@@ -38,13 +38,13 @@ class Ball(pg.Rect):
         self.x += self.x_velocity
         self.y += self.y_velocity
         if self.colliderect(rackets.left_racket):
-            self.x_velocity = abs(self.x_velocity) + self.speed_ball + 1.5
-        if self.colliderect(rackets.right_racket):
-            self.x_velocity = -abs(self.x_velocity) - self.speed_ball - 1.5
+            self.x_velocity = abs(self.x_velocity) + self.speed_ball + 2
         if self.colliderect(rackets.back_right_racket):
-            self.x_velocity = abs(self.x_velocity) + self.speed_ball + 1.5
+            self.x_velocity = abs(self.x_velocity) + self.speed_ball + 4
         if self.colliderect(rackets.back_left_racket):
-            self.x_velocity = -abs(self.x_velocity) - self.speed_ball - 1.5
+            self.x_velocity = -abs(self.x_velocity) - self.speed_ball - 4
+        if self.colliderect(rackets.right_racket):
+            self.x_velocity = -abs(self.x_velocity) - self.speed_ball - 2
 
     def reset(self, window_width, window_height):
         if self.right >= window_width or self.left <= 0:
@@ -56,28 +56,13 @@ class Ball(pg.Rect):
             rackets.right_y = window_height // 2
             self.movement()
 
-    def score(self, window_width, window):
-        global score_player1, score_player2
-        font = pg.font.Font(None, 35)
-        if self.right >= window_width:
-            self.right = window_width
-            score_player1 += 1
-
-        if self.left <= 0:
-            self.left = 0
-            score_player2 += 1
-
-        player1 = (font.render(f"player 1               {score_player1}", True, 'white'))
-        player2 = (font.render(f"{score_player2}               player 2", True, 'white'))
-        window.blit(player1, (FIRST_LINE - player1.get_width() // 2, HEIGHT // 100))
-        window.blit(player2, (THIRD_LINE - player2.get_width() // 2, HEIGHT // 100))
     def stop_ball(self, window_height):
         if self.bottom >= window_height:
             self.bottom = window_height
-            self.y_velocity = -self.speed_ball * 1.2
+            self.y_velocity = -self.speed_ball * 1.4
         if self.top <= MARGIN_LINE:
             self.top = MARGIN_LINE
-            self.y_velocity = self.speed_ball * 1.2
+            self.y_velocity = self.speed_ball * 1.4
 
     def draw_ball(self, window):
         pg.draw.circle(window, self.ball_color, self.center, self.radius)
@@ -90,12 +75,12 @@ class Rackets(pg.Rect):
         self.back_left_racket = None
         self.right_racket = None
         self.left_racket = None
-        self.left_width = 15
-        self.right_width = 15
+        self.left_width = 35
+        self.right_width = 35
         self.height = 125
-        self.right_x = width - 25
-        self.right_y = (height // 2) - 50
         self.left_x = 15
+        self.right_x = 1165
+        self.right_y = (height // 2) - 50
         self.left_y = (height // 2) - 50
         self.left_speedX = 7
         self.left_speedY = 10
@@ -109,6 +94,29 @@ class Rackets(pg.Rect):
         self.down_pressed = False
         self.right_pressed = False
         self.left_pressed = False
+
+    def computer(self):
+        racket_speedY = 1.8 * ball.speed_ball
+        ball_midpoint_y = ball.y + ball.height
+        racket_midpoint_y = self.right_y + self.height
+        diff_y = ball_midpoint_y - racket_midpoint_y
+
+        if abs(diff_y) > racket_speedY:
+            if diff_y > 0:
+                self.right_y += racket_speedY
+            else:
+                self.right_y -= racket_speedY
+
+        racket_speedX = 2.3 * ball.speed_ball
+        ball_midpoint_x = ball.x - ball.width
+        racket_midpoint_x = self.right_x - self.width
+        diff_x = ball_midpoint_x - racket_midpoint_x
+
+        if abs(diff_x) > racket_speedX:
+            if diff_x < WIDTH // 2:
+                self.right_x += racket_speedX
+            else:
+                self.right_x -= racket_speedX
 
     def update(self, **kwargs):
         # wasd
@@ -125,8 +133,8 @@ class Rackets(pg.Rect):
             self.left_y = HEIGHT - self.height
         if self.left_y <= MARGIN_LINE:
             self.left_y = MARGIN_LINE
-        if self.left_x >= FIRST_LINE - self.left_width:
-            self.left_x = FIRST_LINE - self.left_width
+        if self.left_x >= FIRST_LINE - (self.left_width // 2):
+            self.left_x = FIRST_LINE - (self.left_width // 2)
         if self.left_x <= 0:
             self.left_x = 0
 
@@ -147,15 +155,14 @@ class Rackets(pg.Rect):
             self.right_y = MARGIN_LINE
         if self.right_x <= THIRD_LINE:
             self.right_x = THIRD_LINE
-        if self.right_x >= WIDTH - self.right_width:
-            self.right_x = WIDTH - self.right_width
+        if self.right_x >= WIDTH - (self.right_width // 2):
+            self.right_x = WIDTH - (self.right_width // 2)
 
     def draw_rackets(self, window):
         self.left_racket = (self.left_x, self.left_y, self.left_width // 2, self.height)
-        self.back_left_racket = (self.left_x - self.left_width // 2, self.left_y, self.left_width // 2, self.height)
+        self.back_left_racket = (self.left_x - (self.left_width // 4), self.left_y, self.left_width // 4, self.height)
         self.right_racket = (self.right_x, self.right_y, self.right_width // 2, self.height)
-        self.back_right_racket = (
-            self.right_x + self.right_width // 2, self.right_y, self.right_width // 2, self.height)
+        self.back_right_racket = (self.right_x + (self.right_width // 2), self.right_y, self.right_width // 4, self.height)
         pg.draw.rect(window, '#ffbf00', self.left_racket)  # the front side of left racket
         pg.draw.rect(window, '#000000', self.back_left_racket)  # the back side of right racket
         pg.draw.rect(window, '#73E600', self.right_racket)  # the front side of left racket
@@ -163,7 +170,7 @@ class Rackets(pg.Rect):
 
 
 rackets = Rackets(WIDTH, HEIGHT)
-balls = Ball(BALL_X, BALL_Y, BALL_WIDTH, BALL_HEIGHT)
+ball = Ball(BALL_X, BALL_Y, BALL_WIDTH, BALL_HEIGHT)
 running = True
 while running:
     for event in pg.event.get():
@@ -208,17 +215,18 @@ while running:
                 rackets.a_pressed = False
             elif event.key == pg.K_d:
                 rackets.d_pressed = False
-    rackets.update()
+
     screen.fill(back_ground)
     rackets.draw_rackets(screen)
+   # rackets.computer()
     pg.draw.line(screen, "#b3cccc", (FIRST_LINE, 0), (FIRST_LINE, HEIGHT), 3)
     pg.draw.line(screen, "#ffffff", (SECOND_LINE, 0), (SECOND_LINE, HEIGHT), 5)
     pg.draw.line(screen, "#ffffff", (0, MARGIN_LINE), (WIDTH, MARGIN_LINE), 5)
     pg.draw.line(screen, "#b3cccc", (THIRD_LINE, 0), (THIRD_LINE, HEIGHT), 3)
-    balls.score(WIDTH, screen)
-    balls.move_ball()
-    balls.reset(WIDTH, HEIGHT)
-    balls.stop_ball(HEIGHT)
-    balls.draw_ball(screen)
+    rackets.update()
+    ball.move_ball()
+    ball.reset(WIDTH, HEIGHT)
+    ball.stop_ball(HEIGHT)
+    ball.draw_ball(screen)
     pg.display.flip()
     clock.tick(60)
